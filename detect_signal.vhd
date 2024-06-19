@@ -30,7 +30,7 @@ ARCHITECTURE fsm OF detect_signal IS
     SIGNAL reset_reg, reset_next : STD_LOGIC;
     SIGNAL signal_running_reg, signal_running_next : STD_LOGIC;
     SIGNAL wrt_reg, wrt_next : STD_LOGIC;
-    SIGNAL count, count_next : INTEGER range 0 to 5;
+    SIGNAL count, count_next : INTEGER range 0 to 8;
     SIGNAL done_write_reg, done_write_next : STD_LOGIC;
     SHARED VARIABLE address_reg, address_next : UNSIGNED(15 DOWNTO 0);
 
@@ -82,7 +82,7 @@ BEGIN
                 
             WHEN DETECT_START =>
                 signal_running_next <= '1';
-                IF count = 4 THEN
+                IF count = 8 THEN
                     count_next <= 0;
                     next_state <= WRITE_FIFO;
                 ELSE
@@ -93,7 +93,7 @@ BEGIN
             WHEN WRITE_FIFO =>
                 IF count = 1 THEN
                     wrt_next <= '1';
-                    count_next <= 0;
+                    count_next <= count + 1;
                     next_state <= WRITE_FIFO;
                 ELSIF count = 5 THEN
                     count_next <= 0;

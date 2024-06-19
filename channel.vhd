@@ -17,7 +17,7 @@ USE ieee.std_logic_arith.ALL;
 
 ENTITY channel IS
     GENERIC (
-        carry4_count : INTEGER := 16;
+        carry4_count : INTEGER := 4;
         n_output_bits : INTEGER := 8
     );
     PORT (

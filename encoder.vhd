@@ -34,7 +34,8 @@ BEGIN
         VARIABLE count : unsigned(n_bits_bin - 1 DOWNTO 0); --:= (OTHERS => '0');
 
     BEGIN
-        count := (OTHERS => '0');
+        --count := (OTHERS => '0');
+        count := to_unsigned(1, n_bits_bin);
         -- Simply loop over the thermometer code and count the number of '1's
         IF rising_edge(clk) THEN    
             --IF start_count = '1' THEN 

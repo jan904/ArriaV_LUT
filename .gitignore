@@ -1,0 +1,11 @@
+*.bak
+*.qws
+*.qdf
+clock.*
+*/
+*.rpt
+*.txt
+memory.*
+pll.*
+pll_sim.*
+sap.*
