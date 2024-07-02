@@ -28,15 +28,14 @@ USE ieee.numeric_std.ALL;
 
 ENTITY delay_line IS
     GENERIC (
-        stages : INTEGER := 128
+        stages : INTEGER := 8
     );
     PORT (
         reset : IN STD_LOGIC;
+        lock_interm : IN STD_LOGIC;
         trigger : IN STD_LOGIC;
         clock : IN STD_LOGIC;
-        a, b : IN STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
         signal_running : IN STD_LOGIC;
-        intermediate_signal : OUT STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
         therm_code : OUT STD_LOGIC_VECTOR(stages - 1 DOWNTO 0)
     );
 END delay_line;
@@ -46,92 +45,38 @@ ARCHITECTURE rtl OF delay_line IS
 
     -- Raw output of TDL
     SIGNAL sum : STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
-    -- Output of first row of FlipFlops
-    SIGNAL latched_once : STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
-    SIGNAL unlatched_signal : STD_LOGIC_VECTOR(stages - 1 DOWNTO 0);
 
     COMPONENT carry4
-        PORT (
-            a, b : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-            Cin : IN STD_LOGIC;
-            Cout_vector : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
-            Sum_vector : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
+        GENERIC (
+            stages : INTEGER := 4
         );
-    END COMPONENT;
-
-    COMPONENT fdr
         PORT (
-            rst : IN STD_LOGIC;
             clk : IN STD_LOGIC;
+            rst : IN STD_LOGIC;
+            lock_interm : IN STD_LOGIC;
             lock : IN STD_LOGIC;
-            t : IN STD_LOGIC;
-            q : OUT STD_LOGIC
+            a, b : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
+            Cin : IN STD_LOGIC;
+            Sum_vector : OUT STD_LOGIC_VECTOR(stages-1 DOWNTO 0)
         );
     END COMPONENT;
-	
-
-    -- Keep attribute to prevent synthesis tool from optimizing away the signals
-	ATTRIBUTE keep : boolean;
-    ATTRIBUTE keep OF a : SIGNAL IS TRUE;
-    ATTRIBUTE keep OF b : SIGNAL IS TRUE;
 	
 BEGIN
 
     -- Instantiate the carry4 cells
-    carry_delay_line : FOR i IN 0 TO stages/4 - 1 GENERATE
-
-        -- First cell in the chain. Seperated as it takes the trigger signal as input
-        first_carry4 : IF i = 0 GENERATE
-        BEGIN
-            delayblock : carry4
-            PORT MAP(
-                a => a(3 DOWNTO 0),
-                b => b(3 DOWNTO 0),
-                Cin => trigger,
-                Cout_vector => unlatched_signal(3 DOWNTO 0),
-                Sum_vector => sum(3 DOWNTO 0)
-            );
-        END GENERATE first_carry4;
-
-        -- All other cells in the chain. Input of the carry4 cells is the carry-out of the previous cell
-        next_carry4 : IF i > 0 GENERATE
-        BEGIN
-            delayblock : carry4
-            PORT MAP(
-                a => a(4 * (i + 1) - 1 DOWNTO (4 * i)),
-                b => b(4 * (i + 1) - 1 DOWNTO (4 * i)),
-                Cin => unlatched_signal((4 * i) - 1),
-                Cout_vector => unlatched_signal((4 * (i + 1)) - 1 DOWNTO (4 * i)),
-                Sum_vector => sum((4 * (i + 1)) - 1 DOWNTO (4 * i))
-            );
-        END GENERATE next_carry4;
-    END GENERATE;
-
-    -- Instantiate the FlipFlops
-    latch_1 : FOR i IN 0 TO stages - 1 GENERATE
-    BEGIN
-
-        -- First row of FlipFlops
-        ff1 : fdr
-        PORT MAP(
-            rst => reset,
-            lock => signal_running,
-            clk => clock,
-            t => sum(i),
-            q => latched_once(i)
-        );
-
-        -- Second row of FlipFlops
-        ff2 : fdr
-        PORT MAP(
-            rst => reset,
-            lock => signal_running,
-            clk => clock,
-            t => latched_once(i),
-            q => therm_code(i)
-        );
-    END GENERATE latch_1;
-
-    intermediate_signal <= latched_once;
+    delayblock : carry4
+    GENERIC MAP(
+        stages => stages
+    )
+    PORT MAP(
+        clk => clock,
+        rst => reset,
+        lock_interm => lock_interm,
+        lock => signal_running,
+        a => (OTHERS => '0'), 
+        b => (OTHERS => '1'), 
+        Cin => trigger,
+        Sum_vector => therm_code(stages-1 DOWNTO 0)
+    );
 
 END ARCHITECTURE rtl;

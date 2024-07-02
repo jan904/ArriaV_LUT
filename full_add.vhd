@@ -18,15 +18,15 @@ ENTITY full_add IS
     a : IN STD_LOGIC;
     b : IN STD_LOGIC;
     Cin : IN STD_LOGIC;
-    Cout : OUT STD_LOGIC;
-    Sum : OUT STD_LOGIC
+    Cout : OUT STD_LOGIC
+    --Sum : OUT STD_LOGIC
   );
 END ENTITY full_add;
 
 ARCHITECTURE behavioral OF full_add IS
 
 BEGIN
-  Sum <= not (Cin XOR ( a XOR b ));
+  --Sum <= not (Cin XOR ( a XOR b ));
   Cout <= (a AND b) OR (Cin AND (a XOR b));
   
 END ARCHITECTURE behavioral;

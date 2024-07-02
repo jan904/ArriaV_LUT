@@ -61,6 +61,13 @@ set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_location_assignment PIN_C16 -to out_s
+set_location_assignment PIN_AM10 -to signal_in
+set_location_assignment PIN_C13 -to signal_out[5]
+set_location_assignment PIN_C14 -to signal_out[3]
+set_location_assignment PIN_D16 -to signal_out[1]
+set_global_assignment -name EDA_NETLIST_WRITER_OUTPUT_DIR simulation/questa -section_id eda_simulation
+set_global_assignment -name VHDL_FILE /misc/home/mue/hoefer/quartus/arriaV_phase_shifted/lock_ff.vhd
 set_global_assignment -name SDC_FILE time.sdc
 set_global_assignment -name VHDL_FILE carry4.vhd
 set_global_assignment -name VHDL_FILE channel.vhd
@@ -73,9 +80,4 @@ set_global_assignment -name VHDL_FILE handle_start.vhd
 set_global_assignment -name QIP_FILE pll.qip
 set_global_assignment -name SIP_FILE pll.sip
 set_global_assignment -name QIP_FILE memory.qip
-set_location_assignment PIN_C16 -to out_s
-set_location_assignment PIN_AM10 -to signal_in
-set_location_assignment PIN_C13 -to signal_out[5]
-set_location_assignment PIN_C14 -to signal_out[3]
-set_location_assignment PIN_D16 -to signal_out[1]
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -11,7 +11,10 @@ ENTITY detect_signal IS
         clock : IN STD_LOGIC;
         start : IN STD_LOGIC;
         signal_in : IN STD_LOGIC;
-        signal_out : IN STD_LOGIC_VECTOR(n_output_bits - 1 DOWNTO 0);
+        lock1 : IN STD_LOGIC;
+        lock2 : IN STD_LOGIC;
+        lock3 : IN STD_LOGIC;
+        lock4 : IN STD_LOGIC;
         address : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
         signal_running : OUT STD_LOGIC;
         reset : OUT STD_LOGIC;
@@ -23,7 +26,7 @@ END ENTITY detect_signal;
 ARCHITECTURE fsm OF detect_signal IS
 
     -- Define the states of the FSM
-    TYPE stype IS (IDLE, DETECT_START, ADDRESS_UP, WRITE_FIFO, RST);
+    TYPE stype IS (IDLE, DETECT_START, ENCODE, ADDRESS_UP, WRITE_FIFO, RST);
     SIGNAL state, next_state : stype;
 
     -- Signals used to store the values of the signals
@@ -61,7 +64,7 @@ BEGIN
     END PROCESS;
 
     -- FSM logic
-    PROCESS (state, signal_running_reg, wrt_reg, reset_reg, signal_in, count)  
+    PROCESS (state, signal_running_reg, wrt_reg, reset_reg, signal_in, count, lock1, lock2, lock3, lock4)  
     BEGIN
 
         -- Default values
@@ -81,43 +84,23 @@ BEGIN
                 END IF;
                 
             WHEN DETECT_START =>
-                signal_running_next <= '1';
-                IF count = 8 THEN
-                    count_next <= 0;
-                    next_state <= WRITE_FIFO;
+                IF (lock1 = '1' and lock2 = '1' and lock3 = '1' and lock4 = '1') THEN
+                    next_state <= ENCODE;
                 ELSE
-                    count_next <= count + 1;
                     next_state <= DETECT_START;
                 END IF;
 
+            WHEN ENCODE =>
+                signal_running_next <= '1';
+                next_state <= WRITE_FIFO;
+
             WHEN WRITE_FIFO =>
-                IF count = 1 THEN
-                    wrt_next <= '1';
-                    count_next <= count + 1;
-                    next_state <= WRITE_FIFO;
-                ELSIF count = 5 THEN
-                    count_next <= 0;
-                    wrt_next <= '0';
-                    next_state <= ADDRESS_UP;
-                ELSE 
-                    count_next <= count + 1;
-                    next_state <= WRITE_FIFO;
-                END IF;
+                wrt_next <= '1';
+                next_state <= ADDRESS_UP;
 
             WHEN ADDRESS_UP =>
-                IF count = 1 THEN
-                    address_next := address_reg + 1;
-                    wrt_next <= '0';
-                    count_next <= count + 1;
-                    next_state <= ADDRESS_UP;
-                ELSIF count = 5 THEN
-                    count_next <= 0;
-                    next_state <= RST;
-                ELSE
-                    count_next <= count + 1;
-                    next_state <= WRITE_FIFO;
-                    next_state <= ADDRESS_UP;
-                END IF;
+                address_next := address_reg + 1;
+                next_state <= RST;
 
             WHEN RST =>
                 IF signal_in = '0' or reset_reg = '1' THEN

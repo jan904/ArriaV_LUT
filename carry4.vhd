@@ -13,56 +13,59 @@
 
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
-USE ieee.std_logic_arith.ALL;
+USE ieee.numeric_std.ALL;
 
 ENTITY carry4 IS
+    GENERIC (
+        stages : INTEGER := 4
+    );
     PORT (
-        a, b : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+        clk : IN STD_LOGIC;
+        rst : IN STD_LOGIC;
+        lock_interm : IN STD_LOGIC;
+        lock : IN STD_LOGIC;
+        a, b : IN STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
         Cin : IN STD_LOGIC;
-        Cout_vector : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
-        Sum_vector : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
+        Sum_vector : OUT STD_LOGIC_VECTOR(stages-1 DOWNTO 0)
     );
 END ENTITY carry4;
 
 ARCHITECTURE rtl OF carry4 IS
 
-    SIGNAL carry : STD_LOGIC_VECTOR(4 DOWNTO 0);
+    --SIGNAL carry : STD_LOGIC_VECTOR(4 DOWNTO 0);
+    SIGNAL output : STD_LOGIC_VECTOR(1 DOWNTO 0);
 
-    COMPONENT full_add IS
-        PORT (
-            a : IN STD_LOGIC;
-            b : IN STD_LOGIC;
-            Cin : IN STD_LOGIC;
-            Cout : OUT STD_LOGIC;
-            Sum : OUT STD_LOGIC
-        );
-    END COMPONENT full_add;
-
-    -- Keep attribute to prevent synthesis tool from optimizing away the signals
-	ATTRIBUTE keep : boolean;
-    ATTRIBUTE keep OF carry : SIGNAL IS TRUE;
-    ATTRIBUTE keep OF a : SIGNAL IS TRUE;
-    ATTRIBUTE keep OF b : SIGNAL IS TRUE;
+    SIGNAL total : STD_LOGIC_VECTOR(stages DOWNTO 0);
+    SIGNAL interm : STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
 
 BEGIN
-    -- Connect the carry-in of the first full adder to the module's Cin input
-    carry(0) <= Cin;
 
-    -- Instantiate 4 full adders and connect them in a chain
-    instan_fa : FOR ii IN 0 TO 3 GENERATE
-        fa : full_add port map (
-            a => a(ii), 
-            b => b(ii),
-            Cin => carry(ii),
-            Cout => carry(ii+1),
-            Sum => Sum_vector(ii)
-        );
-    END GENERATE instan_fa;
+    total <= std_logic_vector(resize(unsigned(a),stages+1) + resize(unsigned(b), stages+1) + unsigned'('0'&Cin));
 
-    -- Connect the carry-outs of the full adders to the Cout_vector output
-    Cout_vector(0) <= carry(1);
-    Cout_vector(1) <= carry(2);
-    Cout_vector(2) <= carry(3);
-    Cout_vector(3) <= carry(4);
+    PROCESS(clk, rst)
+    BEGIN
+        IF rst = '1' THEN
+            interm <= (OTHERS => '0');
+        ELSIF rising_edge(clk) THEN
+            FOR i IN 0 TO stages-1 LOOP
+                IF lock_interm = '0' THEN
+                    interm(i) <= total(i);
+                END IF;
+            END LOOP;
+        END IF;
+    END PROCESS;
+
+    PROCESS(clk, rst)
+    BEGIN
+        IF rst = '1' THEN
+            Sum_vector <= (OTHERS => '0');
+        ELSIF rising_edge(clk) THEN
+            FOR i IN 0 TO stages-1 LOOP
+                IF lock = '0' THEN
+                    Sum_vector(i) <= interm(i);
+                END IF;
+            END LOOP;
+        END IF;
+    END PROCESS;
 
 END ARCHITECTURE rtl;

@@ -19,7 +19,10 @@ ENTITY encoder IS
     );
     PORT (
         clk : IN STD_LOGIC;
-        thermometer : IN STD_LOGIC_VECTOR((n_bits_therm - 1) DOWNTO 0);
+        therm1 : IN STD_LOGIC_VECTOR((n_bits_therm - 1) DOWNTO 0);
+        therm2 : IN STD_LOGIC_VECTOR((n_bits_therm - 1) DOWNTO 0);
+        therm3 : IN STD_LOGIC_VECTOR((n_bits_therm - 1) DOWNTO 0);
+        therm4 : IN STD_LOGIC_VECTOR((n_bits_therm - 1) DOWNTO 0);
         count_bin : OUT STD_LOGIC_VECTOR((n_bits_bin - 1) DOWNTO 0)
     );
 END ENTITY encoder;
@@ -27,24 +30,60 @@ END ENTITY encoder;
 
 ARCHITECTURE rtl OF encoder IS
 
+    SIGNAL found : BOOLEAN := FALSE;
+    SIGNAL bin : STD_LOGIC_VECTOR(n_bits_bin - 1 DOWNTO 0); --:= (OTHERS => '0');
+
+    ATTRIBUTE keep : BOOLEAN;
+    ATTRIBUTE keep OF bin : SIGNAL IS TRUE;
+
 BEGIN
 
     PROCESS (clk)
-        -- Variable to store the count
-        VARIABLE count : unsigned(n_bits_bin - 1 DOWNTO 0); --:= (OTHERS => '0');
-
     BEGIN
-        --count := (OTHERS => '0');
-        count := to_unsigned(1, n_bits_bin);
-        -- Simply loop over the thermometer code and count the number of '1's
-        IF rising_edge(clk) THEN    
-            --IF start_count = '1' THEN 
+
+        IF rising_edge(clk) THEN   
+
+            found <= FALSE; 
+            bin <= (OTHERS => '0');
+
+            IF (not found) THEN
                 FOR i IN 0 TO n_bits_therm-1 LOOP
-                    IF thermometer(i) = '1' THEN
-                        count := count + 1;
+                    IF therm4(n_bits_therm-1-i) = '1' THEN
+                        bin <= "00" & STD_LOGIC_VECTOR(to_unsigned(n_bits_therm - 1 - i, 6));
+                        found <= TRUE;
                     END IF;
                 END LOOP;
-                count_bin <= STD_LOGIC_VECTOR(count);
+            END IF;
+
+            IF (not found) THEN
+                FOR i IN 0 TO n_bits_therm-1 LOOP
+                    IF therm3(n_bits_therm-1-i) = '1' THEN
+                        bin <= "01" & STD_LOGIC_VECTOR(to_unsigned(n_bits_therm - 1 - i, 6));
+                        found <= TRUE;
+                    END IF;
+                END LOOP;
+            END IF;
+            
+            IF (not found) THEN
+                FOR i IN 0 TO n_bits_therm-1 LOOP
+                    IF therm2(n_bits_therm-1-i) = '1' THEN
+                        bin <= "10" & STD_LOGIC_VECTOR(to_unsigned(n_bits_therm - 1 - i, 6));
+                        found <= TRUE;
+                    END IF;
+                END LOOP;
+            END IF;
+
+            IF (not found) THEN
+                FOR i IN 0 TO n_bits_therm-1 LOOP
+                    IF therm1(n_bits_therm-1-i) = '1' THEN
+                        bin <= "11" & STD_LOGIC_VECTOR(to_unsigned(n_bits_therm - 1 - i, 6));
+                        found <= TRUE;
+                    END IF;
+                END LOOP;
+            END IF;
+
+            count_bin <= bin;
+
         END IF;
     END PROCESS;
 
