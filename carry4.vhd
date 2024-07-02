@@ -21,6 +21,7 @@ ENTITY carry4 IS
     );
     PORT (
         clk : IN STD_LOGIC;
+        clk_slow : IN STD_LOGIC;
         rst : IN STD_LOGIC;
         lock_interm : IN STD_LOGIC;
         lock : IN STD_LOGIC;
@@ -32,9 +33,6 @@ END ENTITY carry4;
 
 ARCHITECTURE rtl OF carry4 IS
 
-    --SIGNAL carry : STD_LOGIC_VECTOR(4 DOWNTO 0);
-    SIGNAL output : STD_LOGIC_VECTOR(1 DOWNTO 0);
-
     SIGNAL total : STD_LOGIC_VECTOR(stages DOWNTO 0);
     SIGNAL interm : STD_LOGIC_VECTOR(stages-1 DOWNTO 0);
 
@@ -42,24 +40,22 @@ BEGIN
 
     total <= std_logic_vector(resize(unsigned(a),stages+1) + resize(unsigned(b), stages+1) + unsigned'('0'&Cin));
 
-    PROCESS(clk, rst)
+    PROCESS(clk)
     BEGIN
-        IF rst = '1' THEN
-            interm <= (OTHERS => '0');
-        ELSIF rising_edge(clk) THEN
+        IF rising_edge(clk) THEN
             FOR i IN 0 TO stages-1 LOOP
                 IF lock_interm = '0' THEN
-                    interm(i) <= total(i);
+                    interm(i) <= not total(i);
                 END IF;
             END LOOP;
         END IF;
     END PROCESS;
 
-    PROCESS(clk, rst)
+    PROCESS(clk_slow, rst)
     BEGIN
         IF rst = '1' THEN
             Sum_vector <= (OTHERS => '0');
-        ELSIF rising_edge(clk) THEN
+        ELSIF rising_edge(clk_slow) THEN
             FOR i IN 0 TO stages-1 LOOP
                 IF lock = '0' THEN
                     Sum_vector(i) <= interm(i);

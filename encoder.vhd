@@ -31,7 +31,7 @@ END ENTITY encoder;
 ARCHITECTURE rtl OF encoder IS
 
     SIGNAL found : BOOLEAN := FALSE;
-    SIGNAL bin : STD_LOGIC_VECTOR(n_bits_bin - 1 DOWNTO 0); --:= (OTHERS => '0');
+    SIGNAL bin : STD_LOGIC_VECTOR(n_bits_bin - 1 DOWNTO 0) := (OTHERS => '0');
 
     ATTRIBUTE keep : BOOLEAN;
     ATTRIBUTE keep OF bin : SIGNAL IS TRUE;
@@ -44,7 +44,7 @@ BEGIN
         IF rising_edge(clk) THEN   
 
             found <= FALSE; 
-            bin <= (OTHERS => '0');
+            bin <= (OTHERS => '0');                
 
             IF (not found) THEN
                 FOR i IN 0 TO n_bits_therm-1 LOOP

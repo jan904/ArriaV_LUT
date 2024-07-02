@@ -64,6 +64,7 @@ ARCHITECTURE rtl OF channel IS
             lock_interm : IN STD_LOGIC;
             trigger : IN STD_LOGIC;
             clock : IN STD_LOGIC;
+            clock_slow : IN STD_LOGIC;
             signal_running : IN STD_LOGIC;
             therm_code : OUT STD_LOGIC_VECTOR(stages - 1 DOWNTO 0)
         );
@@ -134,7 +135,6 @@ ARCHITECTURE rtl OF channel IS
     COMPONENT lock_ff IS
         PORT(
             clk : IN STD_LOGIC;
-            rst : IN STD_LOGIC;
             start : IN STD_LOGIC;
             signal_in : IN STD_LOGIC;
             lock : OUT STD_LOGIC
@@ -185,6 +185,7 @@ BEGIN
         signal_running => busy,
         trigger => signal_in,
         clock => pll_clock1,
+        clock_slow => clk,
         therm_code => therm_code1
     );
 
@@ -199,6 +200,7 @@ BEGIN
         signal_running => busy,
         trigger => signal_in,
         clock => pll_clock2,
+        clock_slow => clk,
         therm_code => therm_code2
     );
 
@@ -212,6 +214,7 @@ BEGIN
         signal_running => busy,
         trigger => signal_in,
         clock => pll_clock3,
+        clock_slow => clk,
         therm_code => therm_code3
     );
 
@@ -225,13 +228,13 @@ BEGIN
         signal_running => busy,
         trigger => signal_in,
         clock => pll_clock4,
+        clock_slow => clk,
         therm_code => therm_code4
     );
 
     lock_ff_inst1 : lock_ff
     PORT MAP(
         clk => pll_clock1,
-        rst => reset_after_signal,
         start => reset_after_start,
         signal_in => signal_in,
         lock => lock1
@@ -240,7 +243,6 @@ BEGIN
     lock_ff_inst2 : lock_ff
     PORT MAP(
         clk => pll_clock2,
-        rst => reset_after_signal,
         start => reset_after_start,
         signal_in => signal_in,
         lock => lock2
@@ -249,7 +251,6 @@ BEGIN
     lock_ff_inst3 : lock_ff
     PORT MAP(
         clk => pll_clock3,
-        rst => reset_after_signal,
         start => reset_after_start,
         signal_in => signal_in,
         lock => lock3
@@ -258,7 +259,6 @@ BEGIN
     lock_ff_inst4 : lock_ff
     PORT MAP(
         clk => pll_clock4,
-        rst => reset_after_signal,
         start => reset_after_start,
         signal_in => signal_in,
         lock => lock4
@@ -294,7 +294,5 @@ BEGIN
         therm4 => therm_code4,
         count_bin => bin_output
     );
-
-    signal_out <= bin_output;
         
 END ARCHITECTURE rtl;
